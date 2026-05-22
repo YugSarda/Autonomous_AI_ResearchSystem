@@ -1,0 +1,47 @@
+# ================= CORE BACKEND =================
+fastapi
+uvicorn
+python-multipart
+pydantic
+python-dotenv
+
+# ================= LLAMAINDEX =================
+llama-index
+llama-index-embeddings-huggingface
+llama-index-vector-stores-chroma
+
+# ================= VECTOR DATABASE =================
+chromadb
+faiss-cpu
+
+# ================= RETRIEVAL =================
+rank-bm25
+sentence-transformers
+scikit-learn
+numpy
+
+# ================= OLLAMA CLIENT =================
+requests
+httpx
+
+# ================= ASYNC + STREAMING =================
+aiohttp
+
+# ================= CACHE =================
+redis
+
+# ================= WEB SEARCH =================
+tavily-python
+
+# ================= FILE PROCESSING =================
+pypdf
+unstructured
+
+# ================= FRONTEND =================
+streamlit
+
+# ================= PDF EXPORT =================
+reportlab
+
+# ================= UTILITIES =================
+tqdm
