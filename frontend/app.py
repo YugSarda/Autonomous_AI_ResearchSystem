@@ -1,138 +1,3 @@
-# import streamlit as st
-# import requests
-# import asyncio
-# import aiohttp
-# import base64
-# from io import BytesIO
-# from reportlab.pdfgen import canvas
-
-# # ================= CONFIG =================
-# BACKEND_URL = "http://localhost:8000"
-
-# st.set_page_config(page_title="Autonomous AI Research System", layout="wide")
-
-# # ================= SESSION STATE =================
-# if "chat_history" not in st.session_state:
-#     st.session_state.chat_history = []
-
-# if "debug" not in st.session_state:
-#     st.session_state.debug = {}
-
-# # ================= SIDEBAR =================
-# st.sidebar.title("⚙️ Settings")
-
-# show_reasoning = st.sidebar.toggle("Show Reasoning", value=True)
-# show_sources = st.sidebar.toggle("Show Sources", value=True)
-
-# st.sidebar.markdown("---")
-# st.sidebar.header("📂 Upload Documents")
-
-# uploaded_files = st.sidebar.file_uploader(
-#     "Upload PDFs or TXT",
-#     type=["pdf", "txt"],
-#     accept_multiple_files=True
-# )
-
-# if uploaded_files:
-#     for file in uploaded_files:
-#         files = {"file": (file.name, file.getvalue())}
-#         requests.post(f"{BACKEND_URL}/upload", files=files)
-#     st.sidebar.success("Files uploaded successfully!")
-
-# # ================= MAIN TITLE =================
-# st.title("🧠 Autonomous AI Research System")
-
-# # ================= CHAT DISPLAY =================
-# for chat in st.session_state.chat_history:
-#     with st.chat_message(chat["role"]):
-#         st.markdown(chat["content"])
-
-# # ================= QUERY INPUT =================
-# query = st.chat_input("Ask a research question...")
-
-# # ================= STREAM FUNCTION =================
-# async def stream_response(query):
-#     async with aiohttp.ClientSession() as session:
-#         async with session.post(f"{BACKEND_URL}/query/stream?q={query}") as resp:
-#             async for chunk in resp.content:
-#                 yield chunk.decode("utf-8")
-
-# # ================= PDF DOWNLOAD =================
-# def generate_pdf(text):
-#     buffer = BytesIO()
-#     c = canvas.Canvas(buffer)
-#     c.drawString(50, 800, text[:1000])
-#     c.save()
-#     buffer.seek(0)
-#     return buffer
-
-# # ================= MAIN LOGIC =================
-# if query:
-#     st.session_state.chat_history.append({"role": "user", "content": query})
-
-#     with st.chat_message("user"):
-#         st.markdown(query)
-
-#     with st.chat_message("assistant"):
-
-#         response_placeholder = st.empty()
-#         full_response = {"text": ""}
-
-# async def display_stream():
-#     async for chunk in stream_response(query):
-#         full_response["text"] += chunk
-#         response_placeholder.markdown(full_response["text"])
-
-#         asyncio.run(display_stream())
-
-#         # FINAL RESPONSE (FOR METADATA)
-#         api_response = requests.post(
-#             f"{BACKEND_URL}/query",
-#             params={"q": query}
-#         ).json()
-
-#         answer = api_response.get("answer", "")
-#         confidence = api_response.get("confidence", 0)
-#         sources = api_response.get("sources", [])
-#         logs = api_response.get("logs", [])
-#         metrics = api_response.get("metrics", {})
-
-#         # ================= DISPLAY OUTPUT =================
-
-#         st.markdown("### 📊 Confidence Score")
-#         st.progress(confidence / 100)
-#         st.write(f"**{confidence}% Confidence**")
-
-#         if show_sources:
-#             st.markdown("### 📚 Sources")
-#             for src in sources[:5]:
-#                 st.code(str(src))
-
-#         if show_reasoning:
-#             st.markdown("### 🧠 Agent Reasoning")
-#             for log in logs:
-#                 st.text(log)
-
-#         # ================= DEBUG PANEL =================
-#         with st.expander("🔍 Debug Panel"):
-
-#             st.subheader("⚙️ Metrics")
-#             st.json(metrics)
-
-#             st.subheader("📜 Raw Logs")
-#             st.write(logs)
-
-#         # ================= DOWNLOAD =================
-#         pdf_buffer = generate_pdf(answer)
-#         st.download_button(
-#             label="📄 Download Answer as PDF",
-#             data=pdf_buffer,
-#             file_name="answer.pdf",
-#             mime="application/pdf"
-#         )
-
-#     st.session_state.chat_history.append({"role": "assistant", "content": answer})
-
 import streamlit as st
 import requests
 
@@ -140,12 +5,40 @@ import requests
 # CONFIG
 # =========================================================
 
-BACKEND_URL = "http://127.0.0.1:8003"
+BACKEND_URL = "http://127.0.0.1:8000"
 
 st.set_page_config(
     page_title="Autonomous AI Research System",
     layout="wide"
 )
+
+# =========================================================
+# SESSION STATE INIT
+# =========================================================
+
+if "uploaded_files" not in st.session_state:
+    st.session_state.uploaded_files = []
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+# =========================================================
+# CHECK BACKEND STATUS ON LOAD
+# =========================================================
+
+def check_upload_status():
+    """Check backend for current upload status."""
+    try:
+        resp = requests.get(f"{BACKEND_URL}/upload/status", timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            st.session_state.uploaded_files = data.get("uploaded_files", [])
+            return data.get("retriever_ready", False)
+    except Exception:
+        pass
+    return False
+
+retriever_ready = check_upload_status()
 
 # =========================================================
 # TITLE
@@ -159,11 +52,6 @@ st.title("🧠 Autonomous AI Research System")
 
 st.sidebar.title("⚙️ Settings")
 
-show_reasoning = st.sidebar.toggle(
-    "Show Reasoning",
-    value=True
-)
-
 show_sources = st.sidebar.toggle(
     "Show Sources",
     value=True
@@ -172,53 +60,146 @@ show_sources = st.sidebar.toggle(
 st.sidebar.markdown("---")
 
 # =========================================================
-# FILE UPLOAD
+# UPLOAD STATUS
+# =========================================================
+
+st.sidebar.header("📂 Upload Status")
+
+if retriever_ready:
+    st.sidebar.success(f"✅ Retriever ready ({len(st.session_state.uploaded_files)} file(s))")
+else:
+    st.sidebar.warning("⚠️ No documents uploaded yet")
+
+if st.session_state.uploaded_files:
+    with st.sidebar.expander("📄 Uploaded Files"):
+        for f in st.session_state.uploaded_files:
+            st.text(f"• {f}")
+
+st.sidebar.markdown("---")
+
+# =========================================================
+# FILE UPLOAD (Multi-file support)
 # =========================================================
 
 st.sidebar.header("📂 Upload Documents")
 
-uploaded_file = st.sidebar.file_uploader(
-    "Upload PDF or TXT",
-    type=["pdf", "txt"]
+uploaded_files = st.sidebar.file_uploader(
+    "Upload PDFs or TXT",
+    type=["pdf", "txt"],
+    accept_multiple_files=True
 )
 
 # =========================================================
-# MANUAL BUTTON
+# UPLOAD BUTTON
 # =========================================================
 
-if st.sidebar.button("🚀 Upload File"):
+if st.sidebar.button("🚀 Upload Files"):
 
-    if uploaded_file is None:
+    if not uploaded_files:
 
-        st.sidebar.error("Please select file first")
+        st.sidebar.error("Please select files first")
 
     else:
 
-        try:
+        success_count = 0
+        error_count = 0
 
-            st.sidebar.write("📤 Sending request...")
+        progress_bar = st.sidebar.progress(0)
+        status_text = st.sidebar.empty()
 
-            files = {
-                "file": (
-                    uploaded_file.name,
-                    uploaded_file.getvalue(),
-                    uploaded_file.type
+        for i, uploaded_file in enumerate(uploaded_files):
+
+            try:
+
+                status_text.text(f"📤 Uploading {uploaded_file.name}...")
+
+                files = {
+                    "file": (
+                        uploaded_file.name,
+                        uploaded_file.getvalue(),
+                        uploaded_file.type
+                    )
+                }
+
+                response = requests.post(
+                    f"{BACKEND_URL}/upload",
+                    files=files,
+                    timeout=300
                 )
-            }
 
-            response = requests.post(
-                f"{BACKEND_URL}/upload",
-                files=files,
-                timeout=300
-            )
+                if response.status_code == 200:
+                    success_count += 1
+                    if uploaded_file.name not in st.session_state.uploaded_files:
+                        st.session_state.uploaded_files.append(uploaded_file.name)
+                else:
+                    error_count += 1
 
-            st.sidebar.success("✅ Upload successful")
+            except Exception as e:
+                error_count += 1
+                st.sidebar.error(f"❌ {uploaded_file.name}: {str(e)}")
 
-            st.sidebar.json(response.json())
+            progress_bar.progress((i + 1) / len(uploaded_files))
 
-        except Exception as e:
+        status_text.text("")
 
-            st.sidebar.error(str(e))
+        if success_count > 0:
+            st.sidebar.success(f"✅ {success_count} file(s) uploaded successfully")
+            # Refresh status
+            retriever_ready = check_upload_status()
+
+        if error_count > 0:
+            st.sidebar.error(f"❌ {error_count} file(s) failed")
+
+# =========================================================
+# MEMORY PANEL
+# =========================================================
+
+st.sidebar.markdown("---")
+st.sidebar.header("🧠 Memory")
+
+with st.sidebar.expander("View Memory Contents"):
+    try:
+        mem_resp = requests.get(f"{BACKEND_URL}/memory/default_session", timeout=5)
+        if mem_resp.status_code == 200:
+            mem_data = mem_resp.json()
+            
+            st.subheader("Short-Term Memory")
+            st.caption(f"Count: {mem_data.get('short_term_count', 0)}")
+            for item in mem_data.get("short_term", []):
+                with st.container():
+                    st.markdown(f"**Q:** {item.get('query', '')[:80]}")
+                    st.markdown(f"**A:** {item.get('answer', '')[:100]}...")
+                    st.divider()
+            
+            st.subheader("Long-Term Memory (SQLite)")
+            st.caption(f"Count: {mem_data.get('long_term_count', 0)}")
+            for item in mem_data.get("long_term", []):
+                with st.container():
+                    st.markdown(f"**Q:** {item.get('query', '')[:80]}")
+                    st.markdown(f"**A:** {item.get('answer', '')[:100]}...")
+                    st.caption(f"Confidence: {item.get('confidence', 'N/A')}% | {item.get('timestamp', '')}")
+                    st.divider()
+        else:
+            st.info("No memory data available")
+    except Exception as e:
+        st.info(f"Could not load memory: {e}")
+
+if st.sidebar.button("🗑️ Clear Memory"):
+    try:
+        resp = requests.delete(f"{BACKEND_URL}/memory/default_session", timeout=5)
+        if resp.status_code == 200:
+            st.sidebar.success("Memory cleared!")
+            st.rerun()
+    except Exception as e:
+        st.sidebar.error(f"Failed to clear: {e}")
+
+# =========================================================
+# CHAT HISTORY
+# =========================================================
+
+for chat in st.session_state.chat_history:
+    with st.chat_message(chat["role"]):
+        st.markdown(chat["content"])
 
 # =========================================================
 # QUERY INPUT
@@ -249,38 +230,32 @@ if query:
             data = response.json()
 
             answer = data.get("answer", "")
-
-            confidence = data.get("confidence", 0)
-
-            logs = data.get("logs", [])
-
-            sources = data.get("sources", [])
+            citations = data.get("citations", [])
 
             with st.chat_message("assistant"):
 
+                # Show only the answer text
                 st.markdown(answer)
 
-                st.markdown("## 📊 Confidence")
+                # Show citations if toggle is on
+                if show_sources and citations:
+                    st.markdown("---")
+                    st.markdown("📚 **Sources**")
+                    for i, cit in enumerate(citations):
+                        file_name = cit.get("file_name", "Unknown")
+                        text_snippet = cit.get("text_snippet", "")
+                        score = cit.get("score", None)
+                        
+                        with st.container():
+                            st.markdown(f"**Source {i+1}:** `{file_name}`")
+                            if score is not None:
+                                st.caption(f"Relevance: {score}")
+                            st.markdown(f"> {text_snippet}")
+                            st.divider()
 
-                st.progress(confidence / 100)
-
-                st.write(f"{confidence}%")
-
-                if show_sources:
-
-                    st.markdown("## 📚 Sources")
-
-                    for src in sources[:5]:
-
-                        st.code(str(src))
-
-                if show_reasoning:
-
-                    st.markdown("## 🧠 Logs")
-
-                    for log in logs:
-
-                        st.text(log)
+            # Store in chat history
+            st.session_state.chat_history.append({"role": "user", "content": query})
+            st.session_state.chat_history.append({"role": "assistant", "content": answer})
 
         except Exception as e:
 

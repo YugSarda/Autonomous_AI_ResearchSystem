@@ -1,0 +1,103 @@
+{
+  "title": "Research System Dashboard",
+  "uid": "research-system",
+  "version": 1,
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Total Queries",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 0, "w": 4, "h": 4},
+      "targets": [{"expr": "total_queries_total{endpoint=\"/query\"}", "legendFormat": "Queries"}],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {"mode": "fixed", "fixedColor": "blue"}
+        }
+      }
+    },
+    {
+      "title": "Avg Response Time (p95)",
+      "type": "stat",
+      "gridPos": {"x": 4, "y": 0, "w": 4, "h": 4},
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(avg_response_time_seconds_bucket[5m])) by (le))", "legendFormat": "p95"}],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {"mode": "fixed", "fixedColor": "green"}
+        }
+      }
+    },
+    {
+      "title": "Cache Hit Ratio",
+      "type": "stat",
+      "gridPos": {"x": 8, "y": 0, "w": 4, "h": 4},
+      "targets": [{"expr": "rate(cache_hits_total{endpoint=\"/query\"}[5m]) / (rate(cache_hits_total{endpoint=\"/query\"}[5m]) + rate(cache_misses_total{endpoint=\"/query\"}[5m])) * 100", "legendFormat": "Hit %"}],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {"mode": "fixed", "fixedColor": "purple"}
+        }
+      }
+    },
+    {
+      "title": "Planner Latency",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 4, "w": 6, "h": 8},
+      "targets": [{"expr": "rate(planner_latency_seconds_sum[5m]) / rate(planner_latency_seconds_count[5m])", "legendFormat": "Avg"}],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "title": "Planner Requests",
+      "type": "graph",
+      "gridPos": {"x": 6, "y": 4, "w": 6, "h": 8},
+      "targets": [{"expr": "rate(requests_total{agent=\"planner\"}[5m])", "legendFormat": "req/s"}],
+      "fieldConfig": {"defaults": {"unit": "reqps"}}
+    },
+    {
+      "title": "Retrieval Latency",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 12, "w": 6, "h": 8},
+      "targets": [{"expr": "rate(retrieval_latency_seconds_sum[5m]) / rate(retrieval_latency_seconds_count[5m])", "legendFormat": "Avg"}],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "title": "Retrieval Failures",
+      "type": "graph",
+      "gridPos": {"x": 6, "y": 12, "w": 6, "h": 8},
+      "targets": [{"expr": "rate(failures_total{agent=\"retrieval\"}[5m])", "legendFormat": "failures/s"}],
+      "fieldConfig": {"defaults": {"unit": "cps"}}
+    },
+    {
+      "title": "Synthesizer Latency",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 20, "w": 6, "h": 8},
+      "targets": [{"expr": "rate(synthes_latency_seconds_sum[5m]) / rate(synthes_latency_seconds_count[5m])", "legendFormat": "Avg"}],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "title": "Synthesis Tokens Generated",
+      "type": "graph",
+      "gridPos": {"x": 6, "y": 20, "w": 6, "h": 8},
+      "targets": [{"expr": "rate(synthesis_tokens_total{agent=\"synthesizer\"}[5m])", "legendFormat": "tokens/s"}],
+      "fieldConfig": {"defaults": {"unit": "cps"}}
+    },
+    {
+      "title": "Critic Latency",
+      "type": "graph",
+      "gridPos": {"x": 0, "y": 28, "w": 6, "h": 8},
+      "targets": [{"expr": "rate(critic_latency_seconds_sum[5m]) / rate(critic_latency_seconds_count[5m])", "legendFormat": "Avg"}],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "title": "Critic Avg Score",
+      "type": "graph",
+      "gridPos": {"x": 6, "y": 28, "w": 6, "h": 8},
+      "targets": [{"expr": "critic_avg_score{agent=\"critic\"}", "legendFormat": "Score"}],
+      "fieldConfig": {"defaults": {"unit": "none", "min": 0, "max": 100}}
+    }
+  ],
+  "refresh": "10s",
+  "tags": ["research", "ai", "rag"],
+  "schemaVersion": 30
+}

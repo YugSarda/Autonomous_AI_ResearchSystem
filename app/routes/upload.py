@@ -1,40 +1,43 @@
+# =============================================================================
+# ORIGINAL UPLOAD CODE (commented for reference)
+# =============================================================================
 # from fastapi import APIRouter, UploadFile
 # import shutil
 # import os
-
+#
 # from app.services.ingestion_service import ingest_documents
 # from app.utils.hybrid_retriever import HybridRetriever
 # import app.core.state as state
-
+#
 # router = APIRouter()
-
+#
 # UPLOAD_DIR = "data/docs"
-
-
+#
+#
 # @router.post("/upload")
 # async def upload(file: UploadFile):
-
+#
 #     os.makedirs(UPLOAD_DIR, exist_ok=True)
-
+#
 #     file_path = os.path.join(UPLOAD_DIR, file.filename)
-
+#
 #     with open(file_path, "wb") as f:
 #         shutil.copyfileobj(file.file, f)
-
+#
 #     print("📄 File saved:", file.filename)
-
+#
 #     # 🔥 BUILD INDEX + RETRIEVER
 #     print("⚙️ Running ingestion...")
 #     index = ingest_documents(UPLOAD_DIR)
-
+#
 #     print("⚙️ Creating retriever...")
 #     state.retriever = HybridRetriever.from_index(index)
-
+#
 #     print("✅ Retriever ready")
-
+#
 #     return {"message": f"{file.filename} uploaded & indexed"}
 
-from fastapi import APIRouter, UploadFile,File
+from fastapi import APIRouter, UploadFile, File
 import shutil
 import os
 import time
@@ -47,9 +50,11 @@ router = APIRouter()
 
 UPLOAD_DIR = "data/docs"
 
+ALLOWED_EXTENSIONS = {".pdf", ".txt", ".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif", ".webp", ".csv", ".xlsx", ".xls"}
+
 
 @router.post("/upload")
-async def upload(file: UploadFile=File(...)):
+async def upload(file: UploadFile = File(...)):
 
     print("\n" + "=" * 60)
     print("📤 UPLOAD ENDPOINT HIT")
@@ -170,4 +175,29 @@ async def upload(file: UploadFile=File(...)):
     return {
         "message": f"{file.filename} uploaded & indexed",
         "time": total_time
+    }
+
+
+# =========================================================
+# UPLOAD STATUS ENDPOINT
+# =========================================================
+
+
+@router.get("/upload/status")
+async def upload_status():
+    """Check if a retriever is available (i.e., documents have been uploaded)."""
+    retriever_ready = state.retriever is not None
+
+    # List uploaded files
+    uploaded_files = []
+    if os.path.exists(UPLOAD_DIR):
+        uploaded_files = [
+            f for f in os.listdir(UPLOAD_DIR)
+            if os.path.isfile(os.path.join(UPLOAD_DIR, f))
+        ]
+
+    return {
+        "retriever_ready": retriever_ready,
+        "uploaded_files": uploaded_files,
+        "file_count": len(uploaded_files),
     }

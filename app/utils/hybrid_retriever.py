@@ -179,21 +179,23 @@ class HybridRetriever:
         # EMBEDDINGS
         # =================================================
 
-        print("\n📌 STEP 4: Generating Embeddings")
+        print("\n📌 STEP 4: Using Precomputed Embeddings")
 
         query_emb = self.embed_model.get_text_embedding(query)
 
         doc_embs = []
 
         for doc in combined:
-
-            text = doc.text if hasattr(doc, "text") else str(doc)
-
-            emb = self.embed_model.get_text_embedding(text)
-
+            # Use precomputed embedding from vector store if available
+            if hasattr(doc, "embedding") and doc.embedding is not None:
+                emb = doc.embedding
+            else:
+                # Fallback: compute embedding only if missing
+                text = doc.text if hasattr(doc, "text") else str(doc)
+                emb = self.embed_model.get_text_embedding(text)
             doc_embs.append(emb)
 
-        print(f"✅ Generated embeddings for {len(doc_embs)} docs")
+        print(f"✅ Using precomputed embeddings for {len(doc_embs)} docs")
 
         # =================================================
         # MMR
