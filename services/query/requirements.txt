@@ -1,14 +1,13 @@
 # ================= CORE BACKEND =================
 fastapi
 uvicorn
-python-multipart
 pydantic
 python-dotenv
 
 # ================= MONITORING =================
 prometheus-client
 
-# ================= LLAMAINDEX =================
+# ================= LLAMAINDEX (retriever hydration) =================
 llama-index
 llama-index-embeddings-huggingface
 llama-index-vector-stores-chroma
@@ -16,26 +15,19 @@ llama-index-vector-stores-chroma
 # ================= VECTOR DATABASE =================
 chromadb
 
-# ================= RETRIEVAL =================
+# ================= RETRIEVAL / RERANK =================
 rank-bm25
 sentence-transformers
 numpy
 
 # ================= HTTP CLIENTS =================
-requests
 httpx
+requests
 
 # ================= GEMINI LLM BACKEND =================
 google-genai
 
-# ================= CACHE =================
-redis
-
-# ================= FILE PROCESSING =================
-pypdf
-
-# ================= FRONTEND =================
-streamlit
-
-# ================= UTILITIES =================
-tqdm
+# =============== LANGGRAPH ORCHESTRATION ===============
+langgraph
+langgraph-checkpoint
+langchain-core

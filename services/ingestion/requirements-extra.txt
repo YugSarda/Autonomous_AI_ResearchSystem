@@ -1,0 +1,2 @@
+# Small add-ons installed as a separate layer to preserve the big pip cache.
+minio

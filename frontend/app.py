@@ -1,5 +1,7 @@
 import streamlit as st
 import requests
+import time
+import uuid
 
 # =========================================================
 # CONFIG
@@ -16,11 +18,18 @@ st.set_page_config(
 # SESSION STATE INIT
 # =========================================================
 
+# Generate a unique session ID per browser session for user isolation
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
+
 if "uploaded_files" not in st.session_state:
     st.session_state.uploaded_files = []
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+
+if "active_tasks" not in st.session_state:
+    st.session_state.active_tasks = {}
 
 # =========================================================
 # CHECK BACKEND STATUS ON LOAD
@@ -33,12 +42,55 @@ def check_upload_status():
         if resp.status_code == 200:
             data = resp.json()
             st.session_state.uploaded_files = data.get("uploaded_files", [])
+            
+            # Check for active tasks
+            recent_tasks = data.get("recent_tasks", [])
+            for task in recent_tasks:
+                if task["status"] in ("pending", "processing"):
+                    st.session_state.active_tasks[task["task_id"]] = task
+            
             return data.get("retriever_ready", False)
     except Exception:
         pass
     return False
 
 retriever_ready = check_upload_status()
+
+# =========================================================
+# POLL ASYNC TASKS
+# =========================================================
+
+def poll_async_tasks():
+    """Poll backend for status of active async tasks."""
+    completed_tasks = []
+    for task_id, task_info in st.session_state.active_tasks.items():
+        try:
+            resp = requests.get(f"{BACKEND_URL}/upload/status/{task_id}", timeout=5)
+            if resp.status_code == 200:
+                task_data = resp.json()
+                if task_data["status"] in ("done", "failed"):
+                    completed_tasks.append(task_id)
+                    st.session_state.active_tasks[task_id] = task_data
+        except Exception:
+            pass
+    
+    # Remove completed tasks from active tracking
+    for task_id in completed_tasks:
+        if task_id in st.session_state.active_tasks:
+            task = st.session_state.active_tasks[task_id]
+            if task["status"] == "done":
+                st.success(f"✅ Async ingestion complete: {task['filename']}")
+            elif task["status"] == "failed":
+                st.error(f"❌ Async ingestion failed: {task['filename']} - {task.get('message', '')}")
+            # Keep in session state for display but mark as no longer "active"
+    
+    # Refresh retriever status
+    if completed_tasks:
+        check_upload_status()
+
+# Poll async tasks every time the app runs
+if st.session_state.active_tasks:
+    poll_async_tasks()
 
 # =========================================================
 # TITLE
@@ -75,6 +127,26 @@ if st.session_state.uploaded_files:
         for f in st.session_state.uploaded_files:
             st.text(f"• {f}")
 
+# =========================================================
+# PENDING ASYNC TASKS
+# =========================================================
+
+if st.session_state.active_tasks:
+    with st.sidebar.expander("⏳ Active Ingestion Tasks", expanded=True):
+        for task_id, task in list(st.session_state.active_tasks.items()):
+            status = task.get("status", "unknown")
+            filename = task.get("filename", "Unknown")
+            
+            if status == "pending":
+                st.markdown(f"⏳ **{filename}**: Queued...")
+            elif status == "processing":
+                st.markdown(f"🔄 **{filename}**: Processing...")
+                st.progress(0.5, text="")
+            elif status == "done":
+                st.markdown(f"✅ **{filename}**: Complete")
+            elif status == "failed":
+                st.markdown(f"❌ **{filename}**: Failed - {task.get('message', '')}")
+
 st.sidebar.markdown("---")
 
 # =========================================================
@@ -103,6 +175,7 @@ if st.sidebar.button("🚀 Upload Files"):
 
         success_count = 0
         error_count = 0
+        async_count = 0
 
         progress_bar = st.sidebar.progress(0)
         status_text = st.sidebar.empty()
@@ -128,9 +201,23 @@ if st.sidebar.button("🚀 Upload Files"):
                 )
 
                 if response.status_code == 200:
-                    success_count += 1
-                    if uploaded_file.name not in st.session_state.uploaded_files:
-                        st.session_state.uploaded_files.append(uploaded_file.name)
+                    data = response.json()
+                    
+                    # Check if async ingestion was started
+                    if data.get("async"):
+                        async_count += 1
+                        task_id = data.get("task_id")
+                        if task_id:
+                            st.session_state.active_tasks[task_id] = {
+                                "task_id": task_id,
+                                "filename": uploaded_file.name,
+                                "status": "pending"
+                            }
+                        st.sidebar.info(f"⏳ {uploaded_file.name}: Async ingestion queued")
+                    else:
+                        success_count += 1
+                        if uploaded_file.name not in st.session_state.uploaded_files:
+                            st.session_state.uploaded_files.append(uploaded_file.name)
                 else:
                     error_count += 1
 
@@ -143,9 +230,12 @@ if st.sidebar.button("🚀 Upload Files"):
         status_text.text("")
 
         if success_count > 0:
-            st.sidebar.success(f"✅ {success_count} file(s) uploaded successfully")
+            st.sidebar.success(f"✅ {success_count} file(s) uploaded and indexed")
             # Refresh status
             retriever_ready = check_upload_status()
+
+        if async_count > 0:
+            st.sidebar.info(f"⏳ {async_count} file(s) queued for async ingestion")
 
         if error_count > 0:
             st.sidebar.error(f"❌ {error_count} file(s) failed")
@@ -159,7 +249,7 @@ st.sidebar.header("🧠 Memory")
 
 with st.sidebar.expander("View Memory Contents"):
     try:
-        mem_resp = requests.get(f"{BACKEND_URL}/memory/default_session", timeout=5)
+        mem_resp = requests.get(f"{BACKEND_URL}/memory/{st.session_state.session_id}", timeout=5)
         if mem_resp.status_code == 200:
             mem_data = mem_resp.json()
             
@@ -171,7 +261,7 @@ with st.sidebar.expander("View Memory Contents"):
                     st.markdown(f"**A:** {item.get('answer', '')[:100]}...")
                     st.divider()
             
-            st.subheader("Long-Term Memory (SQLite)")
+            st.subheader("Long-Term Memory (PostgreSQL)")
             st.caption(f"Count: {mem_data.get('long_term_count', 0)}")
             for item in mem_data.get("long_term", []):
                 with st.container():
@@ -186,7 +276,7 @@ with st.sidebar.expander("View Memory Contents"):
 
 if st.sidebar.button("🗑️ Clear Memory"):
     try:
-        resp = requests.delete(f"{BACKEND_URL}/memory/default_session", timeout=5)
+        resp = requests.delete(f"{BACKEND_URL}/memory/{st.session_state.session_id}", timeout=5)
         if resp.status_code == 200:
             st.sidebar.success("Memory cleared!")
             st.rerun()
@@ -223,8 +313,9 @@ if query:
 
             response = requests.post(
                 f"{BACKEND_URL}/query",
-                params={"q": query},
-                timeout=300
+                params={"q": query, "session_id": st.session_state.session_id},
+                timeout=300,
+                headers={"X-Session-ID": st.session_state.session_id}
             )
 
             data = response.json()

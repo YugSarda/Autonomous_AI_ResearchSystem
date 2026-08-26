@@ -1,0 +1,1 @@
+Autonomous research system integration test document. COVID-19 WHO guidelines summary content for retrieval validation.

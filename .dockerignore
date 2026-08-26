@@ -1,0 +1,16 @@
+# Build-context ignore list (build context is the repo root)
+.git/
+.gitignore
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+data/
+frontend/
+node_modules/
+grafana/
+prometheus.yml
+autonomous_research_system.code-workspace
+services/*/__pycache__/
+services/*/app/**/__pycache__/
