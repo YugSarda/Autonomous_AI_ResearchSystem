@@ -1,0 +1,108 @@
+[33mcommit 16e21eaf4bd9102eed27de89af56181517087df9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: YugSarda <2023ucp1663@mnit.ac.in>
+Date:   Wed Aug 26 18:33:46 2026 +0530
+
+    modified changes
+
+ .dockerignore                                      |  16 [32m++[m
+ app/__pycache__/__init__.cpython-313.pyc           | Bin [31m171[m -> [32m0[m bytes
+ app/__pycache__/main.cpython-313.pyc               | Bin [31m1879[m -> [32m0[m bytes
+ app/agents/__pycache__/__init__.cpython-313.pyc    | Bin [31m178[m -> [32m0[m bytes
+ app/agents/__pycache__/critic.cpython-313.pyc      | Bin [31m3430[m -> [32m0[m bytes
+ app/agents/__pycache__/planner.cpython-313.pyc     | Bin [31m3827[m -> [32m0[m bytes
+ .../__pycache__/retriever_agent.cpython-313.pyc    | Bin [31m1809[m -> [32m0[m bytes
+ .../__pycache__/self_reflection.cpython-313.pyc    | Bin [31m3282[m -> [32m0[m bytes
+ app/agents/__pycache__/synthesizer.cpython-313.pyc | Bin [31m3822[m -> [32m0[m bytes
+ app/core/__pycache__/__init__.cpython-313.pyc      | Bin [31m176[m -> [32m0[m bytes
+ app/core/__pycache__/cache.cpython-313.pyc         | Bin [31m1205[m -> [32m0[m bytes
+ app/core/__pycache__/config.cpython-313.pyc        | Bin [31m535[m -> [32m0[m bytes
+ app/core/__pycache__/langsmith.cpython-313.pyc     | Bin [31m2288[m -> [32m0[m bytes
+ app/core/__pycache__/memory.cpython-313.pyc        | Bin [31m2332[m -> [32m0[m bytes
+ app/core/__pycache__/memory_store.cpython-313.pyc  | Bin [31m6474[m -> [32m0[m bytes
+ app/core/__pycache__/ollama_client.cpython-313.pyc | Bin [31m2308[m -> [32m0[m bytes
+ app/core/__pycache__/state.cpython-313.pyc         | Bin [31m190[m -> [32m0[m bytes
+ app/core/cache.py                                  |  30 [31m---[m
+ app/core/config.py                                 |   9 [31m-[m
+ app/core/langsmith.py                              |  53 [31m----[m
+ app/core/memory.py                                 |  50 [31m----[m
+ app/core/memory_store.py                           | 134 [31m----------[m
+ app/core/ollama_client.py                          |  39 [31m---[m
+ app/core/state.py                                  |   1 [31m-[m
+ app/graph/__pycache__/__init__.cpython-313.pyc     | Bin [31m177[m -> [32m0[m bytes
+ app/graph/__pycache__/nodes.cpython-313.pyc        | Bin [31m15934[m -> [32m0[m bytes
+ app/graph/__pycache__/state.cpython-313.pyc        | Bin [31m3876[m -> [32m0[m bytes
+ app/graph/__pycache__/workflow.cpython-313.pyc     | Bin [31m7316[m -> [32m0[m bytes
+ app/main.py                                        |  49 [31m----[m
+ app/routes/__pycache__/__init__.cpython-313.pyc    | Bin [31m178[m -> [32m0[m bytes
+ app/routes/__pycache__/query.cpython-313.pyc       | Bin [31m5435[m -> [32m0[m bytes
+ app/routes/__pycache__/upload.cpython-313.pyc      | Bin [31m5238[m -> [32m0[m bytes
+ app/routes/upload.py                               | 203 [31m---------------[m
+ app/services/__pycache__/__init__.cpython-313.pyc  | Bin [31m180[m -> [32m0[m bytes
+ .../__pycache__/agent_orchestrator.cpython-313.pyc | Bin [31m843[m -> [32m0[m bytes
+ .../__pycache__/citation_verifier.cpython-313.pyc  | Bin [31m921[m -> [32m0[m bytes
+ .../compression_service.cpython-313.pyc            | Bin [31m965[m -> [32m0[m bytes
+ .../__pycache__/image_processor.cpython-313.pyc    | Bin [31m4691[m -> [32m0[m bytes
+ .../__pycache__/ingestion_service.cpython-313.pyc  | Bin [31m6176[m -> [32m0[m bytes
+ app/services/__pycache__/metrics.cpython-313.pyc   | Bin [31m1363[m -> [32m0[m bytes
+ .../__pycache__/prometheus_metrics.cpython-313.pyc | Bin [31m3817[m -> [32m0[m bytes
+ .../__pycache__/query_pipeline.cpython-313.pyc     | Bin [31m2883[m -> [32m0[m bytes
+ .../__pycache__/reranker_service.cpython-313.pyc   | Bin [31m1522[m -> [32m0[m bytes
+ .../__pycache__/retrieval_service.cpython-313.pyc  | Bin [31m1090[m -> [32m0[m bytes
+ .../__pycache__/table_processor.cpython-313.pyc    | Bin [31m5947[m -> [32m0[m bytes
+ .../__pycache__/web_search.cpython-313.pyc         | Bin [31m902[m -> [32m0[m bytes
+ app/services/agent_orchestrator.py                 |  19 [31m--[m
+ app/services/metrics.py                            |  19 [31m--[m
+ app/services/query_pipeline.py                     | 232 [31m-----------------[m
+ app/services/reranker_service.py                   |  41 [31m----[m
+ app/services/retrieval_service.py                  |  35 [31m---[m
+ .../__pycache__/hybrid_retriever.cpython-313.pyc   | Bin [31m6981[m -> [32m0[m bytes
+ app/utils/hybrid_retriever.py                      | 217 [31m----------------[m
+ autonomous_research_system.code-workspace          |   8 [32m+[m
+ data/docs/2023UCP1663_YUG_SARDA.pdf                | Bin [31m0[m -> [32m282028[m bytes
+ data/docs/test_upload.txt                          |   1 [32m+[m
+ data/memory.db                                     | Bin [31m45056[m -> [32m49152[m bytes
+ data/tasks.db                                      | Bin [31m0[m -> [32m12288[m bytes
+ .../data_level0.bin                                | Bin [31m0[m -> [32m167600[m bytes
+ .../header.bin                                     | Bin [31m0[m -> [32m100[m bytes
+ .../length.bin                                     | Bin [31m0[m -> [32m400[m bytes
+ .../link_lists.bin                                 |   0
+ data/vector_store/chroma.sqlite3                   | Bin [31m188416[m -> [32m417792[m bytes
+ docker-compose.yml                                 | 209 [32m+++++++++++++++[m[31m-[m
+ frontend/app.py                                    | 109 [32m+++++++[m[31m-[m
+ prometheus.yml                                     |  22 [32m+[m[31m-[m
+ requirements.txt                                   |  15 [32m+[m[31m-[m
+ services/gateway/Dockerfile                        |  12 [32m+[m
+ {app/agents => services/gateway/app}/__init__.py   |   0
+ {app => services/gateway/app}/core/__init__.py     |   0
+ services/gateway/app/core/config.py                |  13 [32m+[m
+ services/gateway/app/main.py                       | 217 [32m++++++++++++++++[m
+ .../gateway/app/middleware}/__init__.py            |   0
+ services/gateway/app/middleware/rate_limiter.py    |  51 [32m++++[m
+ services/gateway/requirements.txt                  |   7 [32m+[m
+ services/ingestion/Dockerfile                      |  17 [32m++[m
+ {app/routes => services/ingestion/app}/__init__.py |   0
+ .../ingestion/app/core}/__init__.py                |   0
+ services/ingestion/app/core/config.py              |  27 [32m++[m
+ services/ingestion/app/core/task_store.py          |  91 [32m+++++++[m
+ services/ingestion/app/main.py                     |  56 [32m+++++[m
+ services/ingestion/app/routes/__init__.py          |   0
+ services/ingestion/app/routes/upload.py            | 105 [32m++++++++[m
+ services/ingestion/app/services/__init__.py        |   0
+ services/ingestion/app/services/async_ingestion.py | 177 [32m+++++++++++++[m
+ .../ingestion/app}/services/ingestion_service.py   |  72 [32m++[m[31m----[m
+ .../ingestion/app}/services/table_processor.py     |  10 [32m+[m[31m-[m
+ services/ingestion/app/utils/__init__.py           |   0
+ services/ingestion/app/utils/storage.py            |  78 [32m++++++[m
+ services/ingestion/requirements-extra.txt          |   2 [32m+[m
+ services/ingestion/requirements.txt                |  33 [32m+++[m
+ services/memory/Dockerfile                         |  13 [32m+[m
+ services/memory/app/__init__.py                    |   0
+ services/memory/app/core/__init__.py               |   0
+ services/memory/app/core/cache.py                  |  47 [32m++++[m
+ services/memory/app/core/config.py                 |   7 [32m+[m
+ services/memory/app/core/memory_store.py           | 126 [32m++++++++++[m
+ services/memory/app/main.py                        |  45 [32m++++[m
+ services/memory/app/routes/__init__.py             |   0
+ services/memory/app/routes/memory.py               | 102 [32m++++++++[m
+ services/memory/requirements.txt                   |   7 [32m+[m
+ services/query/Docker

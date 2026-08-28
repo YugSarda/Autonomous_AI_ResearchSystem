@@ -23,17 +23,30 @@ _redis_client: Optional[aioredis.Redis] = None
 _worker_task: Optional[asyncio.Task] = None
 
 
+# async def get_redis() -> aioredis.Redis:
+#     """Get or create the global Redis client."""
+#     global _redis_client
+#     if _redis_client is None:
+#         _redis_client = aioredis.from_url(
+#             REDIS_URL,
+#             decode_responses=True,
+#         )
+#         print("✅ Redis client created for async ingestion")
+#     return _redis_client
 async def get_redis() -> aioredis.Redis:
     """Get or create the global Redis client."""
     global _redis_client
+
     if _redis_client is None:
         _redis_client = aioredis.from_url(
             REDIS_URL,
             decode_responses=True,
+            socket_timeout=None,
+            socket_connect_timeout=10,
         )
         print("✅ Redis client created for async ingestion")
-    return _redis_client
 
+    return _redis_client
 
 async def init_redis_stream():
     """Initialize the Redis Stream consumer group."""
